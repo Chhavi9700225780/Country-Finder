@@ -1,4 +1,4 @@
-const btn = document.querySelector('button'),
+const btn = document.querySelector('.button'),
 inputEl = document.querySelector('input'),
 capital = document.querySelector('.capital'),
 currency = document.querySelector('.currency'),
