@@ -1,110 +1,56 @@
-// Listen for form submit
-document.getElementById('myForm').addEventListener('submit', saveBookmark);
+const btn = document.querySelector('button'),
+inputEl = document.querySelector('input'),
+capital = document.querySelector('.capital'),
+currency = document.querySelector('.currency'),
+continent = document.querySelector('.continent'),
+population = document.querySelector('.population'),
+language = document.querySelector('.lang'),
+contentEl = document.querySelector('.content'),
+country = document.querySelector('.country-name'),
+infoDiv = document.querySelector('.info'),
+image = document.querySelector('img');
 
-// Save Bookmark
-function saveBookmark(e){
-  // Get form values
-  var siteName =document.getElementById('siteName').value;
-  var siteUrl =document.getElementById('siteUrl').value;
 
-  if(!validateForm(siteName, siteUrl)){
-    return false;
-  }
+btn.addEventListener('click',()=>{
+    infoDiv.classList.add('show');
+    let countryName = inputEl.value;
 
-  var bookmark = {
-    name: siteName,
-    url: siteUrl
-  }
-
-  /*
-    // Local Storage Test
-    localStorage.setItem('test', 'Hello World');
-    console.log(localStorage.getItem('test'));
-    localStorage.removeItem('test');
-    console.log(localStorage.getItem('test'));//null in output
-  */
-
-  // Test if bookmarks is null
-  if(localStorage.getItem('bookmarks') === null){
-    // Init array
-    var bookmarks = [];
-    // Add to array
-    bookmarks.push(bookmark);
-    // Set to localStorage
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-  } else {
-    // Get bookmarks from localStorage
-    var bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-    // Add bookmark to array
-    bookmarks.push(bookmark);
-    // Re-set back to localStorage
-    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-  }
-
-  // Clear form
-  document.getElementById('myForm').reset();
-
-  // Re-fetch bookmarks
-  fetchBookmarks();
-
-  // Prevent form from submitting
-  e.preventDefault();
-}
-
-// Delete bookmark
-function deleteBookmark(url){
-  // Get bookmarks from localStorage
-  var bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-  // Loop throught bookmarks
-  for(var i =0;i < bookmarks.length;i++){
-    if(bookmarks[i].url == url){
-      // Remove from array
-      bookmarks.splice(i, 1);
+    if(countryName){
+        infoDiv.innerHTML = 'Please wait fetching country information...'
+        infoDiv.style.background = 'rgb(165, 231, 165)'
+        getCountryDetails(countryName)
+        country.textContent = countryName;
+    }else{
+        infoDiv.innerHTML = 'Please enter country name'
+        infoDiv.style.background = 'rgb(233, 138, 138)'
     }
-  }
-  // Re-set back to localStorage
-  localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+})
 
-  // Re-fetch bookmarks
-  fetchBookmarks();
-}
+async function getCountryDetails(countryName){
+    try {
+        let url = `https://restcountries.com/v3.1/name/${countryName}?fullText=true`
+        let resp = await fetch(url).then((data)=> data.json())
+        console.log(resp);
+        let result = await resp[0];
 
-// Fetch bookmarks
-function fetchBookmarks(){
-  // Get bookmarks from localStorage
-  var bookmarks = JSON.parse(localStorage.getItem('bookmarks'));
-  // Get output id
-  var bookmarksResults = document.getElementById('bookmarksResults');
+        console.log(result);
 
-  // Build output
-  bookmarksResults.innerHTML = '';
-  for(var i = 0; i < bookmarks.length; i++){
-    var name = bookmarks[i].name;
-    var url = bookmarks[i].url;
+        infoDiv.classList.remove('show')
+        contentEl.classList.add('active')
 
-    bookmarksResults.innerHTML += '<div class="well">'+
-                                  '<h3>'+name+
-                                  ' <a class="btn btn-default" target="_blank" href="'+url+'">Visit</a> ' +
-                                  ' <a onclick="deleteBookmark(\''+url+'\')" class="btn btn-danger" href="#">Delete</a> ' +
-                                  '</h3>'+
-                                  '</div>';
-  }
-}
+        capital.innerHTML = `<strong>Capital:</strong>${result.capital[0]}`
+        continent.innerHTML = `<strong>Continent:</strong>${result.continents[0]}`
 
-// Validate Form
-function validateForm(siteName, siteUrl){
-  if(!siteName || !siteUrl){
-    alert('Please fill in the form');
-    return false;
-  }
+        population.innerHTML = `<strong>Population:</strong>${result.population}`
 
-  var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
-  var regex = new RegExp(expression);
+        currency.innerHTML = `<strong>Currency:</strong>${Object.keys(result.currencies)[0]} - ${result.currencies[Object.keys(result.currencies)].name}`
 
-  if(!siteUrl.match(regex)){
-    alert('Please use a valid URL');
-    return false;
-  }
-
-  return true;
+        language.innerHTML = `<strong>Common Languages:</strong>${Object.values(result.languages).toString().split(",").join(", ")}`
+        image.src = `${result.flags.png}`
+    } catch (error) {
+        infoDiv.classList.add('show')
+        infoDiv.innerHTML = 'Please enter a valid country name'
+        infoDiv.style.background = 'rgb(233, 138, 138)'
+        contentEl.classList.remove('active')
+    }
 }
